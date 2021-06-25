@@ -1,14 +1,13 @@
-import ws from 'ws'
-import Server from '@ioc:Adonis/Core/Server'
-import { handle } from 'App/WebSockets/SocketHandler'
+import Ws from 'App/Services/Ws'
+Ws.boot()
 
 /**
- * Pass AdonisJS http server instance to ws.
+ * Listen for incoming socket connections
  */
-const wss = new ws.Server({ server: Server.instance! })
+Ws.io.on('connection', (socket) => {
+  socket.emit('news', { hello: 'world' })
 
-wss.on('connection', (ws: ws) => {
-  ws.on('message', async (message: string) => {
-    await handle(message, ws)
+  socket.on('provider:connect', (data) => {
+    console.log(data)
   })
 })

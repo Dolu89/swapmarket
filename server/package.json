@@ -12,6 +12,7 @@
   "devDependencies": {
     "@adonisjs/assembler": "^5.0.0",
     "@symfony/webpack-encore": "^1.4.0",
+    "@types/ws": "^7.4.4",
     "adonis-preset-ts": "^2.1.0",
     "eslint": "^7.28.0",
     "eslint-config-prettier": "^8.3.0",
@@ -33,10 +34,12 @@
     "@inertiajs/inertia": "^0.9.2",
     "@inertiajs/inertia-vue3": "^0.4.5",
     "@vue/compiler-sfc": "^3.1.1",
+    "keyv": "^4.0.3",
     "proxy-addr": "^2.0.7",
     "reflect-metadata": "^0.1.13",
     "source-map-support": "^0.5.19",
     "vue": "^3.1.1",
-    "vue-loader": "^16.2.0"
+    "vue-loader": "^16.2.0",
+    "ws": "^7.4.6"
   }
 }

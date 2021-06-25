@@ -46,6 +46,10 @@ Encore.setPublicPath('/assets')
 |
 */
 Encore.addEntry('app', './resources/js/app.js')
+Encore.enableVueLoader(() => {}, {
+  version: 3,
+  runtimeCompilerBuild: false,
+})
 
 /*
 |--------------------------------------------------------------------------

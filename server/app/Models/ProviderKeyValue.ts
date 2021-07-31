@@ -5,9 +5,7 @@ export interface ProviderKeyValue {
   data: ProviderKeyValueData
 }
 
-export interface ProviderKeyValueData {
-  name: string
-  hash: string
+export interface ProviderKeyValueData extends ProviderKeyValueDataSanitazed {
   secret: string
 }
 
@@ -19,4 +17,6 @@ export interface ProviderKeyValueSanitazed {
 export interface ProviderKeyValueDataSanitazed {
   name: string
   hash: string
+  publicKey: string
+  fees: number
 }

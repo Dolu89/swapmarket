@@ -13,7 +13,7 @@
         <td>
           <inertia-link :href="`/providers/${provider.hash}`">{{ provider.name }}</inertia-link>
         </td>
-        <td>0.1 %</td>
+        <td>{{ provider.fees }} %</td>
         <td>51</td>
       </tr>
     </table>

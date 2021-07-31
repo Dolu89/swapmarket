@@ -14,7 +14,12 @@ class Ws {
     }
 
     this.booted = true
-    this.io = new Server(AdonisServer.instance!)
+    this.io = new Server(AdonisServer.instance!, {
+      path: '/ws',
+      cors: {
+        origin: '*',
+      },
+    })
   }
 }
 

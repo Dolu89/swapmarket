@@ -1,13 +1,12 @@
+import { ProviderKeyValueData } from 'App/Models/ProviderKeyValue'
+import ProvidersService from 'App/Services/ProvidersService'
 import Ws from 'App/Services/Ws'
 Ws.boot()
 
-/**
- * Listen for incoming socket connections
- */
 Ws.io.on('connection', (socket) => {
-  socket.emit('news', { hello: 'world' })
-
-  socket.on('provider:connect', (data) => {
-    console.log(data)
+  socket.on('provider:connect', async (data: ProviderKeyValueData) => {
+    ProvidersService.addProvider(socket, data)
+    const provider = ProvidersService.getProvider(data.hash)
+    provider.socket.emit('test', 'It works!')
   })
 })

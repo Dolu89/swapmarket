@@ -9,15 +9,12 @@
           <th>Trades</th>
         </tr>
       </thead>
-      <tr>
-        <td><inertia-link href="/broker1">Broker 1</inertia-link></td>
+      <tr v-for="provider in providers" :key="provider.name">
+        <td>
+          <inertia-link :href="`/providers/${provider.hash}`">{{ provider.name }}</inertia-link>
+        </td>
         <td>0.1 %</td>
         <td>51</td>
-      </tr>
-      <tr>
-        <td><inertia-link href="/broker2">Broker 2</inertia-link></td>
-        <td>0.2 %</td>
-        <td>24</td>
       </tr>
     </table>
   </article>
@@ -25,7 +22,7 @@
 
 <script>
 export default {
-  props: ['brokers'],
+  props: ['providers'],
 }
 </script>
 

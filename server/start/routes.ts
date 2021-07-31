@@ -21,4 +21,5 @@
 import Route from '@ioc:Adonis/Core/Route'
 
 Route.get('/', 'HomeController.index')
+Route.get('/providers/:id', 'ProvidersController.index')
 Route.inertia('about', 'about')

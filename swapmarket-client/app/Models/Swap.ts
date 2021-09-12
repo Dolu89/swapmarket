@@ -18,14 +18,17 @@ export default class Swap extends BaseModel {
   public script_hex: string
 
   @column()
-  public satoshis_to_pay: number
-
-  @column()
   public invoice_to_pay: string
 
   @column()
-  public vout_index: number
+  public satoshis_to_pay: number
 
   @column()
-  public is_paid: boolean
+  public contract_vout_index: number
+
+  @column()
+  public invoice_pre_image: string
+
+  @column()
+  public contract_tx_claimed: string
 }

@@ -41,11 +41,17 @@ class SwapService {
             Number.parseInt(currentVout.value.toString()) === amountToPaid + 1000
           ) {
             if (currentTx.status.confirmed) {
+              //Get the swap from DB + set vout index
               const swap = await Swap.query().where('swap_address', swapAddress).firstOrFail()
-              swap.vout_index = index
-              swap.is_paid = true
+              swap.contract_vout_index = index
               await swap.save()
+
+              // Pay invoice + set pre image
               const preImage = await this.payInvoice(swap.invoice_to_pay)
+              swap.invoice_pre_image = preImage
+              await swap.save()
+
+              // Build claim Tx + publish Tx + set Tx hex string
               const claimTx = this.claim(
                 currentTx.txid,
                 swap.script_hex,
@@ -54,6 +60,9 @@ class SwapService {
                 preImage
               )
               await transactions.postTx({ txid: claimTx })
+              swap.contract_tx_claimed = claimTx
+              await swap.save()
+
               clearInterval(interval)
             }
           }

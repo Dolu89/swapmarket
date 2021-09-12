@@ -1,5 +1,6 @@
 import { networks, ECPair } from 'bitcoinjs-lib'
 import Ws from 'App/Services/Ws'
+import SwapService from 'App/Services/SwapService'
 Ws.boot()
 
 Ws.client.on('connect', () => {
@@ -17,6 +18,9 @@ Ws.client.on('connect', () => {
   Ws.client.emit('provider:connect', data)
 })
 
-Ws.client.on('newSwap', (data) => {
-  console.log(data)
-})
+Ws.client.on(
+  'newSwap',
+  async (data: { swapAddress: string; script: string; invoice: string; amount: number }) => {
+    await SwapService.addSwap(data.swapAddress, data.script, data.invoice, data.amount)
+  }
+)

@@ -1,7 +1,11 @@
-<template></template>
+<template>
+  <pre>{{ swaps }}</pre>
+</template>
 
 <script>
-export default {}
+export default {
+  props: ['swaps'],
+}
 </script>
 
 <style>

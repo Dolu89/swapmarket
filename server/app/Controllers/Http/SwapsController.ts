@@ -51,9 +51,14 @@ export default class SwapsController {
     const brokerFees = invoiceSats * (provider.data.fees / 100)
 
     // const { fastestFee } = await fees.getFeesRecommended()
+    //TODO add miner fees
+    const totalSats = invoiceSats + brokerFees
+
     provider.socket.emit('newSwap', {
       swapAddress: p2wsh.address,
       script: swapContract.toString('hex'),
+      invoice: payload.invoice,
+      amount: totalSats,
     })
 
     return inertia.render('swap', {

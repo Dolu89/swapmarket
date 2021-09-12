@@ -31,4 +31,10 @@ export default class Swap extends BaseModel {
 
   @column()
   public contract_tx_claimed: string
+
+  @column()
+  public contract_finalized: boolean
+
+  @column()
+  public error?: string
 }

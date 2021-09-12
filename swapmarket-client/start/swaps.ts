@@ -1,7 +1,7 @@
 import mempoolJS from '@mempool/mempool.js'
 import { crypto, ECPair, networks, opcodes, Payment, payments, Psbt, script } from 'bitcoinjs-lib'
 import varuint from 'varuint-bitcoin'
-import lnService, { pay } from 'ln-service'
+import lnService, { pay, createChainAddress } from 'ln-service'
 import Swap from 'App/Models/Swap'
 import { Tx } from '@mempool/mempool.js/lib/interfaces/bitcoin/transactions'
 
@@ -13,6 +13,12 @@ const {
 } = mempoolJS({
   hostname: 'localhost',
   network: 'regtest',
+})
+const { lnd } = lnService.authenticatedLndGrpc({
+  cert: 'LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNJakNDQWNpZ0F3SUJBZ0lSQVA3MlAzT2YvWHdvbGkweTh3Q1BpRGt3Q2dZSUtvWkl6ajBFQXdJd01ERWYKTUIwR0ExVUVDaE1XYkc1a0lHRjFkRzluWlc1bGNtRjBaV1FnWTJWeWRERU5NQXNHQTFVRUF4TUVaR0YyWlRBZQpGdzB5TVRBNU1UQXdPRFF5TlRWYUZ3MHlNakV4TURVd09EUXlOVFZhTURBeEh6QWRCZ05WQkFvVEZteHVaQ0JoCmRYUnZaMlZ1WlhKaGRHVmtJR05sY25ReERUQUxCZ05WQkFNVEJHUmhkbVV3V1RBVEJnY3Foa2pPUFFJQkJnZ3EKaGtqT1BRTUJCd05DQUFUUjlQYUV2aWxwbDRqTmFYUzF4M0dpS0dQWXNFY1BuU2tWcTZPbThwaEZHaEErM0lVWApVb25qd2ZpK2o1SUNpQ2xWUHFBbmJNbUkwRlA2OHlnVzN2cmhvNEhDTUlHL01BNEdBMVVkRHdFQi93UUVBd0lDCnBEQVRCZ05WSFNVRUREQUtCZ2dyQmdFRkJRY0RBVEFQQmdOVkhSTUJBZjhFQlRBREFRSC9NQjBHQTFVZERnUVcKQkJRdW5NN3psRUkxT0d4VzYwVlkzdzhlRTI5MnVEQm9CZ05WSFJFRVlUQmZnZ1JrWVhabGdnbHNiMk5oYkdodgpjM1NDQkdSaGRtV0NEWEJ2YkdGeUxXNHhMV1JoZG1XQ0JIVnVhWGlDQ25WdWFYaHdZV05yWlhTQ0IySjFabU52CmJtNkhCSDhBQUFHSEVBQUFBQUFBQUFBQUFBQUFBQUFBQUFHSEJLd1NBQU13Q2dZSUtvWkl6ajBFQXdJRFNBQXcKUlFJZ1JHbXp3alUwRS9wRW93YTBHODhVUU5SVnlYUyt1WUMzaFVhY2twKzFBVk1DSVFEaWZ5THhwQWxFWkNVOAp6UDd2UkNSbkdFbnNwVmpwa0hBVUczL01KVjM5M2c9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==',
+  macaroon:
+    'AgEDbG5kAvgBAwoQY0bujC1LKHoTXoBBGn+8QhIBMBoWCgdhZGRyZXNzEgRyZWFkEgV3cml0ZRoTCgRpbmZvEgRyZWFkEgV3cml0ZRoXCghpbnZvaWNlcxIEcmVhZBIFd3JpdGUaIQoIbWFjYXJvb24SCGdlbmVyYXRlEgRyZWFkEgV3cml0ZRoWCgdtZXNzYWdlEgRyZWFkEgV3cml0ZRoXCghvZmZjaGFpbhIEcmVhZBIFd3JpdGUaFgoHb25jaGFpbhIEcmVhZBIFd3JpdGUaFAoFcGVlcnMSBHJlYWQSBXdyaXRlGhgKBnNpZ25lchIIZ2VuZXJhdGUSBHJlYWQAAAYg99qN6VB87mysiqa7iQ0PgjaatWdelI6wMXH6jIIocuY=',
+  socket: '127.0.0.1:10004',
 })
 
 setInterval(async () => {
@@ -66,7 +72,7 @@ const checkSwaps = async () => {
 
             try {
               // Build claim Tx + publish Tx + set Tx hex string
-              const claimTx = claim(
+              const claimTx = await claim(
                 currentTx.txid,
                 swap.script_hex,
                 index,
@@ -95,23 +101,17 @@ const checkSwaps = async () => {
 
 // TODO Use Env var to get node information
 const payInvoice = async (invoice: string): Promise<string> => {
-  const { lnd } = lnService.authenticatedLndGrpc({
-    cert: 'LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNJakNDQWNpZ0F3SUJBZ0lSQVA3MlAzT2YvWHdvbGkweTh3Q1BpRGt3Q2dZSUtvWkl6ajBFQXdJd01ERWYKTUIwR0ExVUVDaE1XYkc1a0lHRjFkRzluWlc1bGNtRjBaV1FnWTJWeWRERU5NQXNHQTFVRUF4TUVaR0YyWlRBZQpGdzB5TVRBNU1UQXdPRFF5TlRWYUZ3MHlNakV4TURVd09EUXlOVFZhTURBeEh6QWRCZ05WQkFvVEZteHVaQ0JoCmRYUnZaMlZ1WlhKaGRHVmtJR05sY25ReERUQUxCZ05WQkFNVEJHUmhkbVV3V1RBVEJnY3Foa2pPUFFJQkJnZ3EKaGtqT1BRTUJCd05DQUFUUjlQYUV2aWxwbDRqTmFYUzF4M0dpS0dQWXNFY1BuU2tWcTZPbThwaEZHaEErM0lVWApVb25qd2ZpK2o1SUNpQ2xWUHFBbmJNbUkwRlA2OHlnVzN2cmhvNEhDTUlHL01BNEdBMVVkRHdFQi93UUVBd0lDCnBEQVRCZ05WSFNVRUREQUtCZ2dyQmdFRkJRY0RBVEFQQmdOVkhSTUJBZjhFQlRBREFRSC9NQjBHQTFVZERnUVcKQkJRdW5NN3psRUkxT0d4VzYwVlkzdzhlRTI5MnVEQm9CZ05WSFJFRVlUQmZnZ1JrWVhabGdnbHNiMk5oYkdodgpjM1NDQkdSaGRtV0NEWEJ2YkdGeUxXNHhMV1JoZG1XQ0JIVnVhWGlDQ25WdWFYaHdZV05yWlhTQ0IySjFabU52CmJtNkhCSDhBQUFHSEVBQUFBQUFBQUFBQUFBQUFBQUFBQUFHSEJLd1NBQU13Q2dZSUtvWkl6ajBFQXdJRFNBQXcKUlFJZ1JHbXp3alUwRS9wRW93YTBHODhVUU5SVnlYUyt1WUMzaFVhY2twKzFBVk1DSVFEaWZ5THhwQWxFWkNVOAp6UDd2UkNSbkdFbnNwVmpwa0hBVUczL01KVjM5M2c9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==',
-    macaroon:
-      'AgEDbG5kAvgBAwoQY0bujC1LKHoTXoBBGn+8QhIBMBoWCgdhZGRyZXNzEgRyZWFkEgV3cml0ZRoTCgRpbmZvEgRyZWFkEgV3cml0ZRoXCghpbnZvaWNlcxIEcmVhZBIFd3JpdGUaIQoIbWFjYXJvb24SCGdlbmVyYXRlEgRyZWFkEgV3cml0ZRoWCgdtZXNzYWdlEgRyZWFkEgV3cml0ZRoXCghvZmZjaGFpbhIEcmVhZBIFd3JpdGUaFgoHb25jaGFpbhIEcmVhZBIFd3JpdGUaFAoFcGVlcnMSBHJlYWQSBXdyaXRlGhgKBnNpZ25lchIIZ2VuZXJhdGUSBHJlYWQAAAYg99qN6VB87mysiqa7iQ0PgjaatWdelI6wMXH6jIIocuY=',
-    socket: '127.0.0.1:10004',
-  })
   const result = await pay({ lnd, request: invoice })
   return result.secret
 }
 
-const claim = (
+const claim = async (
   txId: string,
   scriptHex: string,
   voutIndex: number,
   amount: number,
   preImage: string
-): string => {
+): Promise<string> => {
   const network = networks.regtest
   const wif = 'cVJvJCCDE1tJnjmAyu4LHDf1uM8NUSS8r6QA65zRX5veLxtqdaqd'
   const ecPairSwapProvider = ECPair.fromWIF(wif, network)
@@ -132,9 +132,9 @@ const claim = (
   })
 
   // TODO Add miner fees
-  // TODO Get a new address
+  const { address } = await createChainAddress({ format: 'p2wpkh', lnd })
   psbt.addOutput({
-    address: 'bcrt1q8ahy0hajvf8gvjked8egm4ckpyu3cr59acmnj2',
+    address: address,
     value: amount - 1000,
   })
 

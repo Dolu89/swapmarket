@@ -24,6 +24,9 @@ export default class Swap extends BaseModel {
   public satoshis_to_pay: number
 
   @column()
+  public miner_fees: number
+
+  @column()
   public contract_vout_index: number
 
   @column()

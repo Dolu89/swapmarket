@@ -6,6 +6,7 @@ import { decode } from '@node-lightning/invoice'
 import mempoolJS from '@mempool/mempool.js'
 import { schema } from '@ioc:Adonis/Core/Validator'
 import SwapContractService from 'App/Services/SwapContractService'
+import FeesService from 'App/Services/FeesService'
 
 export default class SwapsController {
   public async create({ inertia, request }: HttpContextContract) {
@@ -21,9 +22,9 @@ export default class SwapsController {
     const refundECpair = ECPair.makeRandom({ network })
 
     const {
-      bitcoin: { blocks },
+      bitcoin: { blocks, fees },
     } = mempoolJS({
-      hostname: 'localhost',
+      hostname: 'mempool.space',
       network: 'regtest', // 'signet' | 'testnet' | 'mainnet'
     })
     const blocksTipHeight = await blocks.getBlocksTipHeight()
@@ -48,26 +49,26 @@ export default class SwapsController {
 
     const invoiceSats = Number(decodedInvoice.valueMsat) / 1000
 
+    const { fastestFee } = await fees.getFeesRecommended()
     const brokerFees = invoiceSats * (provider.data.fees / 100)
+    const minerFees = fastestFee * FeesService.getByteCount({ 'MULTISIG-P2WSH:2-3': 1 }, { P2WPKH: 1 })
+    console.log(FeesService.getByteCount({ 'MULTISIG-P2WSH:2-3': 1 }, { P2WPKH: 1 }))
 
-    // const { fastestFee } = await fees.getFeesRecommended()
-    //TODO add miner fees
-    const totalSats = invoiceSats + brokerFees
+    const totalSats = invoiceSats + brokerFees + minerFees
 
     provider.socket.emit('newSwap', {
       swapAddress: p2wsh.address,
       script: swapContract.toString('hex'),
       invoice: payload.invoice,
       amount: totalSats,
+      minerFees,
     })
 
     return inertia.render('swap', {
       swap: {
         swapAddress: p2wsh.address,
         script: swapContract.toString('hex'),
-        amount: invoiceSats,
-        brokerFees,
-        // miningFees: fastestFee,
+        amount: totalSats,
       },
     })
   }

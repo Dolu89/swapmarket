@@ -18,6 +18,7 @@ export default class Swaps extends BaseSchema {
       table.string('script_hex')
       table.string('invoice_to_pay')
       table.integer('satoshis_to_pay')
+      table.integer('miner_fees')
 
       /**
        * Error in case claim has not succeeded

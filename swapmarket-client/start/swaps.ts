@@ -4,21 +4,22 @@ import varuint from 'varuint-bitcoin'
 import lnService, { pay, createChainAddress } from 'ln-service'
 import Swap from 'App/Models/Swap'
 import { Tx } from '@mempool/mempool.js/lib/interfaces/bitcoin/transactions'
+import axios from 'axios'
 
 // 60 sec
-const loopDuration = 60 * 1000
+const loopDuration = 10 * 1000
+const network = networks.regtest
 
 const {
-  bitcoin: { transactions, addresses },
+  bitcoin: { addresses },
 } = mempoolJS({
   hostname: 'localhost',
-  network: 'regtest',
 })
 const { lnd } = lnService.authenticatedLndGrpc({
-  cert: 'LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNJakNDQWNpZ0F3SUJBZ0lSQVA3MlAzT2YvWHdvbGkweTh3Q1BpRGt3Q2dZSUtvWkl6ajBFQXdJd01ERWYKTUIwR0ExVUVDaE1XYkc1a0lHRjFkRzluWlc1bGNtRjBaV1FnWTJWeWRERU5NQXNHQTFVRUF4TUVaR0YyWlRBZQpGdzB5TVRBNU1UQXdPRFF5TlRWYUZ3MHlNakV4TURVd09EUXlOVFZhTURBeEh6QWRCZ05WQkFvVEZteHVaQ0JoCmRYUnZaMlZ1WlhKaGRHVmtJR05sY25ReERUQUxCZ05WQkFNVEJHUmhkbVV3V1RBVEJnY3Foa2pPUFFJQkJnZ3EKaGtqT1BRTUJCd05DQUFUUjlQYUV2aWxwbDRqTmFYUzF4M0dpS0dQWXNFY1BuU2tWcTZPbThwaEZHaEErM0lVWApVb25qd2ZpK2o1SUNpQ2xWUHFBbmJNbUkwRlA2OHlnVzN2cmhvNEhDTUlHL01BNEdBMVVkRHdFQi93UUVBd0lDCnBEQVRCZ05WSFNVRUREQUtCZ2dyQmdFRkJRY0RBVEFQQmdOVkhSTUJBZjhFQlRBREFRSC9NQjBHQTFVZERnUVcKQkJRdW5NN3psRUkxT0d4VzYwVlkzdzhlRTI5MnVEQm9CZ05WSFJFRVlUQmZnZ1JrWVhabGdnbHNiMk5oYkdodgpjM1NDQkdSaGRtV0NEWEJ2YkdGeUxXNHhMV1JoZG1XQ0JIVnVhWGlDQ25WdWFYaHdZV05yWlhTQ0IySjFabU52CmJtNkhCSDhBQUFHSEVBQUFBQUFBQUFBQUFBQUFBQUFBQUFHSEJLd1NBQU13Q2dZSUtvWkl6ajBFQXdJRFNBQXcKUlFJZ1JHbXp3alUwRS9wRW93YTBHODhVUU5SVnlYUyt1WUMzaFVhY2twKzFBVk1DSVFEaWZ5THhwQWxFWkNVOAp6UDd2UkNSbkdFbnNwVmpwa0hBVUczL01KVjM5M2c9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==',
+  cert: 'LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNKakNDQWN5Z0F3SUJBZ0lRYzE4NFFkUWdJdlE1RWxoQ0Y3Z0dPakFLQmdncWhrak9QUVFEQWpBeE1SOHcKSFFZRFZRUUtFeFpzYm1RZ1lYVjBiMmRsYm1WeVlYUmxaQ0JqWlhKME1RNHdEQVlEVlFRREV3VmpZWEp2YkRBZQpGdzB5TVRBME1EWXhOak13TWpsYUZ3MHlNakEyTURFeE5qTXdNamxhTURFeEh6QWRCZ05WQkFvVEZteHVaQ0JoCmRYUnZaMlZ1WlhKaGRHVmtJR05sY25ReERqQU1CZ05WQkFNVEJXTmhjbTlzTUZrd0V3WUhLb1pJemowQ0FRWUkKS29aSXpqMERBUWNEUWdBRUtTUURoaGVUam12dXRPckszZG9YNFRnTHM2QUpRbTVhOEh3dE1oTkZPZUFrUHlPcwoxaHgwRzdqZmZqWWErWlk2d0M4cER2cUIwOE1BL0RselhOSWVHS09CeFRDQndqQU9CZ05WSFE4QkFmOEVCQU1DCkFxUXdFd1lEVlIwbEJBd3dDZ1lJS3dZQkJRVUhBd0V3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFkQmdOVkhRNEUKRmdRVXVNNzJzN0l5cTREWkhaZHBYcmpIVlJRZk9lb3dhd1lEVlIwUkJHUXdZb0lGWTJGeWIyeUNDV3h2WTJGcwphRzl6ZElJRlkyRnliMnlDRG5CdmJHRnlMVzR4TFdOaGNtOXNnZ1IxYm1sNGdncDFibWw0Y0dGamEyVjBnZ2RpCmRXWmpiMjV1aHdSL0FBQUJoeEFBQUFBQUFBQUFBQUFBQUFBQUFBQUJod1NzR3dBRU1Bb0dDQ3FHU000OUJBTUMKQTBnQU1FVUNJUUNlY1Z6TUoycU5JYmY2d1hwMlpnVWJGM3JkcTFHVkZrcVVwUE9iT3M0Nit3SWdJRHNCcFZtNwpBMG1EUUlZZ2UzdWFESDFMWlRwSWJQWEkwR015RzJyd0ZnUT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=',
   macaroon:
-    'AgEDbG5kAvgBAwoQY0bujC1LKHoTXoBBGn+8QhIBMBoWCgdhZGRyZXNzEgRyZWFkEgV3cml0ZRoTCgRpbmZvEgRyZWFkEgV3cml0ZRoXCghpbnZvaWNlcxIEcmVhZBIFd3JpdGUaIQoIbWFjYXJvb24SCGdlbmVyYXRlEgRyZWFkEgV3cml0ZRoWCgdtZXNzYWdlEgRyZWFkEgV3cml0ZRoXCghvZmZjaGFpbhIEcmVhZBIFd3JpdGUaFgoHb25jaGFpbhIEcmVhZBIFd3JpdGUaFAoFcGVlcnMSBHJlYWQSBXdyaXRlGhgKBnNpZ25lchIIZ2VuZXJhdGUSBHJlYWQAAAYg99qN6VB87mysiqa7iQ0PgjaatWdelI6wMXH6jIIocuY=',
-  socket: '127.0.0.1:10004',
+    'AgEDbG5kAvgBAwoQVcKg7h15Xe4FwmD+ooGXahIBMBoWCgdhZGRyZXNzEgRyZWFkEgV3cml0ZRoTCgRpbmZvEgRyZWFkEgV3cml0ZRoXCghpbnZvaWNlcxIEcmVhZBIFd3JpdGUaIQoIbWFjYXJvb24SCGdlbmVyYXRlEgRyZWFkEgV3cml0ZRoWCgdtZXNzYWdlEgRyZWFkEgV3cml0ZRoXCghvZmZjaGFpbhIEcmVhZBIFd3JpdGUaFgoHb25jaGFpbhIEcmVhZBIFd3JpdGUaFAoFcGVlcnMSBHJlYWQSBXdyaXRlGhgKBnNpZ25lchIIZ2VuZXJhdGUSBHJlYWQAAAYgUJ1owUSQKaio1Rm1fUqeAvNahttYwugdtniLqTS2m1s=',
+  socket: '127.0.0.1:10003',
 })
 
 setInterval(async () => {
@@ -46,7 +47,7 @@ const checkSwaps = async () => {
       for (const currentVout of currentTx.vout) {
         if (
           currentVout.scriptpubkey_address === swap.swap_address &&
-          Number.parseInt(currentVout.value.toString()) === swap.satoshis_to_pay + 1000
+          Number.parseInt(currentVout.value.toString()) === swap.satoshis_to_pay
         ) {
           if (currentTx.status.confirmed) {
             //Get the swap from DB + set vout index
@@ -54,7 +55,7 @@ const checkSwaps = async () => {
             await swap.save()
 
             let preImage: string | null = null
-            // Pay only if not payed already
+            // Pay only if not already payed
             if (swap.invoice_pre_image === null) {
               try {
                 // Pay invoice + set pre image
@@ -76,12 +77,14 @@ const checkSwaps = async () => {
                 currentTx.txid,
                 swap.script_hex,
                 index,
-                swap.satoshis_to_pay + 1000,
+                swap.satoshis_to_pay,
+                swap.miner_fees,
                 preImage
               )
               swap.contract_tx_claimed = claimTx
               await swap.save()
-              await transactions.postTx({ txid: claimTx })
+              const result = await axios.post('http://localhost/api/tx', claimTx)
+              console.log(result)
             } catch (error) {
               swap.error = error
               await swap.save()
@@ -110,9 +113,9 @@ const claim = async (
   scriptHex: string,
   voutIndex: number,
   amount: number,
+  minerFees: number,
   preImage: string
 ): Promise<string> => {
-  const network = networks.regtest
   const wif = 'cVJvJCCDE1tJnjmAyu4LHDf1uM8NUSS8r6QA65zRX5veLxtqdaqd'
   const ecPairSwapProvider = ECPair.fromWIF(wif, network)
   const psbt = new Psbt({ network })
@@ -131,11 +134,10 @@ const claim = async (
     witnessScript: Buffer.from(scriptHex, 'hex'),
   })
 
-  // TODO Add miner fees
   const { address } = await createChainAddress({ format: 'p2wpkh', lnd })
   psbt.addOutput({
     address: address,
-    value: amount - 1000,
+    value: amount - minerFees,
   })
 
   psbt.signInput(0, ecPairSwapProvider)
@@ -148,14 +150,14 @@ const claim = async (
     }
 
     let payment: Payment = {
-      network: networks.regtest,
+      network,
       output: witnessScript,
       // This logic should be more strict and make sure the pubkeys in the
       // meaningful script are the ones signing in the PSBT etc.
       input: script.compile([input.partialSig![0].signature, opcodes.OP_TRUE]),
     }
     payment = payments.p2wsh({
-      network: networks.regtest,
+      network,
       redeem: payment,
     })
 
@@ -165,8 +167,6 @@ const claim = async (
         output: Buffer.from(scriptHex, 'hex'),
       },
     })
-    // console.log('First branch witness stack:')
-    // console.log(witnessStackClaimBranch.witness.map((x) => x.toString('hex')))
 
     return {
       finalScriptSig: payment.input,

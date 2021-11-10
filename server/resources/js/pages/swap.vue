@@ -2,7 +2,7 @@
   <div>
     <h1>Swap in progress</h1>
     <div>Address to pay : {{ swap.swapAddress }}</div>
-    <div>Total to pay : {{ swap.amount + swap.brokerFees }}</div>
+    <div>Total to pay : {{ swap.amount }}</div>
   </div>
 </template>
 

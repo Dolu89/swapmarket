@@ -20,7 +20,19 @@ Ws.client.on('connect', () => {
 
 Ws.client.on(
   'newSwap',
-  async (data: { swapAddress: string; script: string; invoice: string; amount: number }) => {
-    await SwapService.addSwap(data.swapAddress, data.script, data.invoice, data.amount)
+  async (data: {
+    swapAddress: string
+    script: string
+    invoice: string
+    amount: number
+    minerFees: number
+  }) => {
+    await SwapService.addSwap(
+      data.swapAddress,
+      data.script,
+      data.invoice,
+      data.amount,
+      data.minerFees
+    )
   }
 )

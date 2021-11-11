@@ -1,9 +1,18 @@
 <template>
+  <h2>
+    Swap <small class="color-primary">with {{ provider.name }}</small>
+  </h2>
+  <!-- {{ provider }} -->
   <div>
-    <h1>{{ provider.name }}</h1>
-    {{ provider }}
-    Invoice <input v-model="invoice" type="text" />
-    <button @click="createSwap(invoice, provider.hash)">Create swap</button>
+    <pre>Send bitcoins on chain. Receive bitcoins off chain (Lightning network)</pre>
+    <input
+      v-model="invoice"
+      type="text"
+      placeholder="Paste your invoice (bolt11) you want to pay"
+    />
+    <div style="width: 100%; text-align: center">
+      <button @click="createSwap(invoice, provider.hash)">Create swap</button>
+    </div>
   </div>
 </template>
 
@@ -28,4 +37,7 @@ export default {
 </script>
 
 <style>
+input {
+  width: 100%;
+}
 </style>

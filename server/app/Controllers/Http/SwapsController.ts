@@ -7,9 +7,10 @@ import mempoolJS from '@mempool/mempool.js'
 import { schema } from '@ioc:Adonis/Core/Validator'
 import SwapContractService from 'App/Services/SwapContractService'
 import FeesService from 'App/Services/FeesService'
+import crypto from 'crypto'
 
 export default class SwapsController {
-  public async create({ inertia, request }: HttpContextContract) {
+  public async create({ request, response }: HttpContextContract) {
     const createSwapSchema = schema.create({
       invoice: schema.string({ trim: true, escape: true }),
       providerId: schema.string({ trim: true, escape: true }),
@@ -51,12 +52,15 @@ export default class SwapsController {
 
     const { fastestFee } = await fees.getFeesRecommended()
     const brokerFees = invoiceSats * (provider.data.fees / 100)
-    const minerFees = fastestFee * FeesService.getByteCount({ 'MULTISIG-P2WSH:2-3': 1 }, { P2WPKH: 1 })
-    console.log(FeesService.getByteCount({ 'MULTISIG-P2WSH:2-3': 1 }, { P2WPKH: 1 }))
+    const minerFees =
+      fastestFee * FeesService.getByteCount({ 'MULTISIG-P2WSH:2-3': 1 }, { P2WPKH: 1 })
 
     const totalSats = invoiceSats + brokerFees + minerFees
 
-    provider.socket.emit('newSwap', {
+    const uniqueId = crypto.randomUUID()
+
+    provider.socket.emit('swap:created', {
+      id: uniqueId,
       swapAddress: p2wsh.address,
       script: swapContract.toString('hex'),
       invoice: payload.invoice,
@@ -64,12 +68,34 @@ export default class SwapsController {
       minerFees,
     })
 
-    return inertia.render('swap', {
-      swap: {
-        swapAddress: p2wsh.address,
-        script: swapContract.toString('hex'),
-        amount: totalSats,
-      },
+    return response
+      .redirect()
+      .withQs({
+        swap: {
+          provider: provider.data.publicKey,
+          swapAddress: p2wsh.address,
+          script: swapContract.toString('hex'),
+          amount: totalSats,
+        },
+      })
+      .toRoute('SwapsController.view', {
+        uuid: uniqueId,
+      })
+  }
+
+  public async view({ inertia, request }: HttpContextContract) {
+    const { uuid } = request.params()
+    const { swap } = request.qs()
+    if (swap !== undefined && swap !== '') {
+      // From swap creation only
+      return inertia.render(`swap`, {
+        uuid: uuid,
+        swap,
+      })
+    }
+
+    return inertia.render(`swap`, {
+      uuid: uuid,
     })
   }
 }

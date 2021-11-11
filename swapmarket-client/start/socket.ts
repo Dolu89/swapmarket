@@ -19,8 +19,9 @@ Ws.client.on('connect', () => {
 })
 
 Ws.client.on(
-  'newSwap',
+  'swap:created',
   async (data: {
+    id: string,
     swapAddress: string
     script: string
     invoice: string
@@ -28,6 +29,7 @@ Ws.client.on(
     minerFees: number
   }) => {
     await SwapService.addSwap(
+      data.id,
       data.swapAddress,
       data.script,
       data.invoice,

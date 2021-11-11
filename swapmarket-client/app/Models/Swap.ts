@@ -3,7 +3,7 @@ import { BaseModel, column } from '@ioc:Adonis/Lucid/Orm'
 
 export default class Swap extends BaseModel {
   @column({ isPrimary: true })
-  public id: number
+  public id: string
 
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime
@@ -39,5 +39,9 @@ export default class Swap extends BaseModel {
   public contract_finalized: boolean
 
   @column()
+  public contract_finalized_emitted: boolean
+
+  @column()
   public error?: string
+
 }

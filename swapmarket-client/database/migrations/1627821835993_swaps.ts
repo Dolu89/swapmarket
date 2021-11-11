@@ -5,7 +5,7 @@ export default class Swaps extends BaseSchema {
 
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.increments('id')
+      table.string('id').primary()
 
       /**
        * Uses timestamptz for PostgreSQL and DATETIME2 for MSSQL
@@ -50,6 +50,12 @@ export default class Swaps extends BaseSchema {
        * contract_finalized : Is the swap finalized?
        */
       table.boolean('contract_finalized').defaultTo(false)
+
+      /**
+       * Step 5 : Swap is finalized. Event has to be emitted 
+       * contract_finalized_emitted : Event has been emitted?
+       */
+      table.boolean('contract_finalized_emitted').defaultTo(false)
     })
   }
 

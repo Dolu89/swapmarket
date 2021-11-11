@@ -9,4 +9,8 @@ Ws.io.on('connection', (socket) => {
     const provider = ProvidersService.getProvider(data.hash)
     provider.socket.emit('test', 'It works!')
   })
+
+  socket.on('swap:completed', (id: string) => {
+    socket.emit('swap:completed', id)
+  })
 })

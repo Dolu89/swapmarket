@@ -5,6 +5,7 @@ import lnService, { pay, createChainAddress } from 'ln-service'
 import Swap from 'App/Models/Swap'
 import { Tx } from '@mempool/mempool.js/lib/interfaces/bitcoin/transactions'
 import axios from 'axios'
+import Ws from 'App/Services/Ws'
 
 // 60 sec
 const loopDuration = 10 * 1000
@@ -22,14 +23,29 @@ const { lnd } = lnService.authenticatedLndGrpc({
   socket: '127.0.0.1:10003',
 })
 
+Ws.client.on('swap:completed', async (id: string) => {
+  const swap = await Swap.findByOrFail('id', id)
+  swap.contract_finalized_emitted = true;
+  await swap.save()
+})
+
 setInterval(async () => {
   await checkSwaps()
+  await emitSwapsFinalized()
 }, loopDuration)
+
+const emitSwapsFinalized = async () => {
+  const swapsToEmit = await Swap.query().where('contract_finalized', true).andWhere('contract_finalized_emitted', false)
+
+  for (let swap of swapsToEmit) {
+    Ws.client.emit('swap:completed', swap.id)
+  }
+}
 
 const checkSwaps = async () => {
   // Get all swaps not claimed yet
   const swapsToCheck = await Swap.query().where('contract_finalized', false)
-  console.log(`${swapsToCheck.length} swap(s) to check`)
+  // console.log(`${swapsToCheck.length} swap(s) to check`)
 
   for (const swap of swapsToCheck) {
     let txs: Tx[] = []

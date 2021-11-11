@@ -2,6 +2,7 @@ import Swap from 'App/Models/Swap'
 
 class SwapService {
   public async addSwap(
+    id: string,
     swapAddress: string,
     scriptHex: string,
     invoiceToPay: string,
@@ -9,6 +10,7 @@ class SwapService {
     minerFees: number
   ) {
     await Swap.create({
+      id,
       swap_address: swapAddress,
       script_hex: scriptHex,
       invoice_to_pay: invoiceToPay,

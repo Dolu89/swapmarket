@@ -46,7 +46,7 @@ Encore.setPublicPath('/assets')
 |
 */
 Encore.addEntry('app', './resources/js/app.js')
-Encore.enableVueLoader(() => {}, {
+Encore.enableVueLoader(() => { }, {
   version: 3,
   runtimeCompilerBuild: false,
 })
@@ -161,7 +161,7 @@ Encore.configureDevServerOptions((options) => {
 |
 */
 // Encore.enableSassLoader()
-// Encore.enableLessLoader()
+Encore.enableLessLoader()
 // Encore.enableStylusLoader()
 
 /*

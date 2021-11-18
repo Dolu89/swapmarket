@@ -1,6 +1,6 @@
 <template>
   <article>
-    <h1>Brokers online</h1>
+    <h1>Providers online</h1>
     <table>
       <thead>
         <tr>

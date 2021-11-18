@@ -45,6 +45,7 @@
     "proxy-addr": "^2.0.7",
     "reflect-metadata": "^0.1.13",
     "socket.io": "^4.1.2",
+    "socket.io-client": "^4.3.2",
     "source-map-support": "^0.5.20",
     "vue": "^3.1.1",
     "vue-loader": "^16.2.0"

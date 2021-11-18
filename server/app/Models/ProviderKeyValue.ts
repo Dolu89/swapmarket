@@ -5,16 +5,16 @@ export interface ProviderKeyValue {
   data: ProviderKeyValueData
 }
 
-export interface ProviderKeyValueData extends ProviderKeyValueDataSanitazed {
+export interface ProviderKeyValueData extends ProviderKeyValueDataSanitized {
   secret: string
 }
 
-export interface ProviderKeyValueSanitazed {
+export interface ProviderKeyValueSanitized {
   socket: Socket
-  data: ProviderKeyValueDataSanitazed
+  data: ProviderKeyValueDataSanitized
 }
 
-export interface ProviderKeyValueDataSanitazed {
+export interface ProviderKeyValueDataSanitized {
   name: string
   hash: string
   publicKey: string

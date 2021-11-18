@@ -1,27 +1,27 @@
 import ProviderNotFoundException from 'App/Exceptions/ProviderNotFoundException'
 import {
   ProviderKeyValueData,
-  ProviderKeyValueDataSanitazed,
-  ProviderKeyValueSanitazed,
+  ProviderKeyValueDataSanitized,
+  ProviderKeyValueSanitized,
 } from 'App/Models/ProviderKeyValue'
 import { Socket } from 'socket.io'
 
 class ProviderService {
-  private providers: { [key: string]: ProviderKeyValueSanitazed }
+  private providers: { [key: string]: ProviderKeyValueSanitized }
 
   constructor() {
     this.providers = {}
   }
 
-  public getProviders(): ProviderKeyValueDataSanitazed[] {
-    const providers: ProviderKeyValueDataSanitazed[] = []
+  public getProviders(): ProviderKeyValueDataSanitized[] {
+    const providers: ProviderKeyValueDataSanitized[] = []
     for (let key in this.providers) {
       providers.push(this.providers[key].data)
     }
     return providers
   }
 
-  public getProvider(key: string): ProviderKeyValueSanitazed {
+  public getProvider(key: string): ProviderKeyValueSanitized {
     const provider = this.providers[key]
     if (!provider) {
       throw new ProviderNotFoundException('Provider not found', 404)
@@ -40,9 +40,9 @@ class ProviderService {
     delete this.providers[key]
   }
 
-  private sanitzeData(data: ProviderKeyValueData): ProviderKeyValueDataSanitazed {
-    const { secret, ...dataSanitazed } = data
-    return dataSanitazed
+  private sanitzeData(data: ProviderKeyValueData): ProviderKeyValueDataSanitized {
+    const { secret, ...dataSanitized } = data
+    return dataSanitized
   }
 }
 

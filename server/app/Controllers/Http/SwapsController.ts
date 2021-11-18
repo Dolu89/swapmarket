@@ -25,8 +25,8 @@ export default class SwapsController {
     const {
       bitcoin: { blocks, fees },
     } = mempoolJS({
-      hostname: 'mempool.space',
-      network: 'regtest', // 'signet' | 'testnet' | 'mainnet'
+      hostname: 'localhost',
+      //network: 'testnet', // 'signet' | 'testnet' | 'mainnet'
     })
     const blocksTipHeight = await blocks.getBlocksTipHeight()
 
